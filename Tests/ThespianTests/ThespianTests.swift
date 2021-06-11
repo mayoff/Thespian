@@ -5,9 +5,11 @@ actor Thespian {
     var continuation: CheckedContinuation<Void, Never>? = nil
     var wasStarted = false
 
-    init(ex: XCTestExpectation) {
+    init() { }
+
+    func finishInit(ex: XCTestExpectation) {
         task = async {
-            print("\(self) inside async \(wasStarted)")
+            print("\(self) \(#function) async \(wasStarted)")
             if !wasStarted {
                 await withCheckedContinuation {
                     continuation = $0
@@ -34,14 +36,15 @@ class ThespianTests: XCTestCase {
     func testAsyncDetached() throws {
         let ex = expectation(description: "blerg")
 
-        let thespian = Thespian(ex: ex)
+        let thespian = Thespian()
         print("thespian created")
         async {
+            await thespian.finishInit(ex: ex)
             print("starting thespian")
             await thespian.start()
         }
 
-        waitForExpectations(timeout: 1)
+        waitForExpectations(timeout: 10)
 
         withExtendedLifetime(thespian) { }
     }
